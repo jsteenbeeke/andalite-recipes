@@ -14,7 +14,7 @@ Add an entry for the Andalite plugin to your `pom.xml` file, and include the Ful
 				<artifactId>andalite-maven-plugin</artifactId>
 				<configuration>
 					<recipes>
-						<recipe>nl.topicus.eduarte.andalite.JSR305Transformation</recipe>
+						<recipe>com.jeroensteenbeeke.andalite.recipes.JSR305Transformation</recipe>
 					</recipes>
 				</configuration>
 				<dependencies>
