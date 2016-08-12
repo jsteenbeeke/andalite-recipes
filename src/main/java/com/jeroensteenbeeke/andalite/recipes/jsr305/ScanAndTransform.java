@@ -119,6 +119,21 @@ public class ScanAndTransform implements PerformableAction {
 							} else {
 								nullable = true;
 							}
+						} else if (analyzedField.hasAnnotation("OneToOne")) {
+							AnalyzedAnnotation annotation = analyzedField
+									.getAnnotation("OneToOne");
+							if (annotation.hasValueNamed("optional")) {
+								BooleanValue booleanValue = annotation
+										.getValue(BooleanValue.class,
+												"optional");
+								if (booleanValue.getValue()) {
+									nullable = true;
+								} else {
+									nullable = false;
+								}
+							} else {
+								nullable = true;
+							}
 						}
 
 						if (nullable != null) {
