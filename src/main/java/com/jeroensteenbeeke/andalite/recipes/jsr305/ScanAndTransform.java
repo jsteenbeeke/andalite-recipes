@@ -97,6 +97,7 @@ public class ScanAndTransform implements PerformableAction {
 										.getValue(BooleanValue.class,
 												"nullable");
 								if (booleanValue.getValue()) {
+									nullable = true;
 								} else {
 									nullable = false;
 								}
