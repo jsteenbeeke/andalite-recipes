@@ -14,14 +14,16 @@ import com.jeroensteenbeeke.andalite.core.TypedActionResult;
 import com.jeroensteenbeeke.andalite.forge.ui.actions.JavaTransformation;
 import com.jeroensteenbeeke.andalite.java.analyzer.AccessModifier;
 import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedClass;
+import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedMethod;
 import com.jeroensteenbeeke.andalite.java.analyzer.ClassAnalyzer;
 import com.jeroensteenbeeke.andalite.java.analyzer.types.Primitive;
 import com.jeroensteenbeeke.andalite.java.transformation.ClassLocator;
 import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipe;
 import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipeBuilder;
 import com.jeroensteenbeeke.andalite.java.transformation.Operations;
+import com.jeroensteenbeeke.andalite.recipes.jsr305.JavaFilesAction.PropertyDescriptor;
 
-public class ScanAndTransform extends JavaFilesAction {
+public class CheckForPrimitivesWithJSR305 extends JavaFilesAction {
 	public ActionResult perform() {
 		List<String> errors = Collections.synchronizedList(new LinkedList<String>());
 
@@ -38,9 +40,7 @@ public class ScanAndTransform extends JavaFilesAction {
 					return false;
 
 				}).flatMap(this::findProperties).map(pd -> {
-					JavaRecipe recipe = toRecipe(pd);
-
-					return recipe != null ? new JavaTransformation(pd.getSourceFile().getOriginalFile(), recipe) : null;
+					return new JavaTransformation(pd.getSourceFile().getOriginalFile(), toRecipe(pd));
 
 				}).filter(Objects::nonNull).forEach(t -> {
 					ActionResult result = t.perform();
@@ -59,37 +59,42 @@ public class ScanAndTransform extends JavaFilesAction {
 
 	@CheckForNull
 	public JavaRecipe toRecipe(PropertyDescriptor descriptor) {
-		if (descriptor.getField().getType() instanceof Primitive) {
-			// Ignore primitives in transformation. They cannot be null so need
-			// not be annotated accordingly
+		boolean primitive = descriptor.getField().getType() instanceof Primitive;
+
+		if (!primitive) {
+			// This check only tries to find primitives that have been annotated
+			// with JSR305 annotation
 			return null;
 		}
 
-		final String firstCapitalized = capitalizeFirst(descriptor.getField().getName());
-
 		JavaRecipeBuilder builder = new JavaRecipeBuilder();
 
-		if (descriptor.isNullable()) {
-			builder.atRoot().ensure(Operations.imports("javax.annotation.CheckForNull"));
-			builder.atRoot().ensure(Operations.imports("javax.annotation.Nullable"));
-		} else {
-			builder.atRoot().ensure(Operations.imports("javax.annotation.Nonnull"));
-		}
+		AnalyzedMethod getter = descriptor.getGetter();
+		AnalyzedMethod setter = descriptor.getSetter();
 
-		if (descriptor.getSetter() != null) {
+		if (setter != null) {
 			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
 					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
-					.named("set".concat(firstCapitalized)).forParameterAtIndex(0)
-					.ensure(Operations.hasParameterAnnotation(descriptor.isNullable() ? "Nullable" : "Nonnull"));
-		}
-		if (descriptor.getGetter() != null) {
+					.named(setter.getName()).forParameterAtIndex(0).ensure(Operations.removeParameterAnnotation("Nonnull"));
 			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
-					.withReturnType(descriptor.getField().getType().toJavaString())
-					.named("get".concat(firstCapitalized))
-					.ensure(Operations.hasMethodAnnotation(descriptor.isNullable() ? "CheckForNull" : "Nonnull"));
+					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
+					.named(setter.getName()).forParameterAtIndex(0).ensure(Operations.removeParameterAnnotation("CheckForNull"));
+			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
+					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
+					.named(setter.getName()).forParameterAtIndex(0).ensure(Operations.removeParameterAnnotation("Nullable"));
+		}
+		if (getter != null) {
+			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
+					.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName())
+					.ensure(Operations.removeMethodAnnotation("Nonnull"));
+			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
+			.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName())
+			.ensure(Operations.removeMethodAnnotation("CheckForNull"));
+			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
+			.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName())
+			.ensure(Operations.removeMethodAnnotation("Nullable"));
 		}
 
 		return builder.build();
 	}
-
 }
