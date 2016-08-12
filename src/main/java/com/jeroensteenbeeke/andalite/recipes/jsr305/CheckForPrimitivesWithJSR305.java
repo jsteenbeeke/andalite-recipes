@@ -40,7 +40,9 @@ public class CheckForPrimitivesWithJSR305 extends JavaFilesAction {
 					return false;
 
 				}).flatMap(this::findProperties).map(pd -> {
-					return new JavaTransformation(pd.getSourceFile().getOriginalFile(), toRecipe(pd));
+					JavaRecipe recipe = toRecipe(pd);
+					
+					return recipe != null ? new JavaTransformation(pd.getSourceFile().getOriginalFile(), recipe) : null;
 
 				}).filter(Objects::nonNull).forEach(t -> {
 					ActionResult result = t.perform();
