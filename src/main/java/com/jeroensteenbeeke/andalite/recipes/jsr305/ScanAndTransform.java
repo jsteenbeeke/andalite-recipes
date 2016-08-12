@@ -14,6 +14,7 @@ import com.jeroensteenbeeke.andalite.core.TypedActionResult;
 import com.jeroensteenbeeke.andalite.forge.ui.actions.JavaTransformation;
 import com.jeroensteenbeeke.andalite.java.analyzer.AccessModifier;
 import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedClass;
+import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedMethod;
 import com.jeroensteenbeeke.andalite.java.analyzer.ClassAnalyzer;
 import com.jeroensteenbeeke.andalite.java.analyzer.types.Primitive;
 import com.jeroensteenbeeke.andalite.java.transformation.ClassLocator;
@@ -65,8 +66,6 @@ public class ScanAndTransform extends JavaFilesAction {
 			return null;
 		}
 
-		final String firstCapitalized = capitalizeFirst(descriptor.getField().getName());
-
 		JavaRecipeBuilder builder = new JavaRecipeBuilder();
 
 		if (descriptor.isNullable()) {
@@ -76,16 +75,18 @@ public class ScanAndTransform extends JavaFilesAction {
 			builder.atRoot().ensure(Operations.imports("javax.annotation.Nonnull"));
 		}
 
-		if (descriptor.getSetter() != null) {
+		AnalyzedMethod setter = descriptor.getSetter();
+		if (setter != null) {
 			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
 					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
-					.named("set".concat(firstCapitalized)).forParameterAtIndex(0)
+					.named(setter.getName()).forParameterAtIndex(0)
 					.ensure(Operations.hasParameterAnnotation(descriptor.isNullable() ? "Nullable" : "Nonnull"));
 		}
-		if (descriptor.getGetter() != null) {
+		AnalyzedMethod getter = descriptor.getGetter();
+		if (getter != null) {
 			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
 					.withReturnType(descriptor.getField().getType().toJavaString())
-					.named("get".concat(firstCapitalized))
+					.named(getter.getName())
 					.ensure(Operations.hasMethodAnnotation(descriptor.isNullable() ? "CheckForNull" : "Nonnull"));
 		}
 

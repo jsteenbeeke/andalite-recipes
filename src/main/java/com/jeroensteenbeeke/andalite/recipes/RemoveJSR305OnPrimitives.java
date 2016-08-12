@@ -7,7 +7,6 @@ import com.jeroensteenbeeke.andalite.forge.AbstractForgeRecipe;
 import com.jeroensteenbeeke.andalite.forge.ForgeException;
 import com.jeroensteenbeeke.andalite.forge.ui.Action;
 import com.jeroensteenbeeke.andalite.recipes.jsr305.CheckForPrimitivesWithJSR305;
-import com.jeroensteenbeeke.andalite.recipes.jsr305.ScanAndTransform;
 
 public class RemoveJSR305OnPrimitives extends AbstractForgeRecipe {
 	

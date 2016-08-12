@@ -124,9 +124,15 @@ public abstract class JavaFilesAction implements PerformableAction {
 				this.getter = classDescriptor.getMethod().withModifier(AccessModifier.PUBLIC)
 						.withReturnType(field.getType().toJavaString()).named("is".concat(firstCapitalized));
 			} else {
-				this.getter = classDescriptor.getMethod().withModifier(AccessModifier.PUBLIC)
+				AnalyzedMethod candidate = classDescriptor.getMethod().withModifier(AccessModifier.PUBLIC)
 						.withReturnType(field.getType().toJavaString()).named("get".concat(firstCapitalized));
-
+				if (candidate == null && field.getType().toJavaString().equals("Boolean")) {
+					candidate = classDescriptor.getMethod().withModifier(AccessModifier.PUBLIC)
+							.withReturnType(field.getType().toJavaString()).named("is".concat(firstCapitalized));
+				}
+				
+				this.getter = candidate; 
+				
 			}
 			this.setter = classDescriptor.getMethod().withModifier(AccessModifier.PUBLIC).withReturnType("void")
 					.withParameterOfType(field.getType().toJavaString()).named("set".concat(firstCapitalized));
