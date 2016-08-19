@@ -22,7 +22,7 @@ import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipe;
 import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipeBuilder;
 import com.jeroensteenbeeke.andalite.java.transformation.Operations;
 
-public class ScanAndTransform extends JavaFilesAction {
+public class AddJSR305Annotations extends JavaFilesAction {
 	public ActionResult perform() {
 		List<String> errors = Collections.synchronizedList(new LinkedList<String>());
 

@@ -54,6 +54,18 @@ public abstract class JavaFilesAction implements PerformableAction {
 							} else {
 								nullable = true;
 							}
+						} else if (analyzedField.hasAnnotation("JoinColumn")) {
+							AnalyzedAnnotation annotation = analyzedField.getAnnotation("JoinColumn");
+							if (annotation.hasValueNamed("nullable")) {
+								BooleanValue booleanValue = annotation.getValue(BooleanValue.class, "nullable");
+								if (booleanValue.getValue()) {
+									nullable = true;
+								} else {
+									nullable = false;
+								}
+							} else {
+								nullable = true;
+							}
 
 						} else if (analyzedField.hasAnnotation("ManyToOne")) {
 							AnalyzedAnnotation annotation = analyzedField.getAnnotation("ManyToOne");
