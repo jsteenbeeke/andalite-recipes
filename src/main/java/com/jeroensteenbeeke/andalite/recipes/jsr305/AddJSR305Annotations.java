@@ -66,17 +66,17 @@ public class AddJSR305Annotations extends JavaFilesAction {
 			return null;
 		}
 
-		JavaRecipeBuilder builder = new JavaRecipeBuilder();
+		JavaRecipeBuilder java = new JavaRecipeBuilder();
 
 		if (descriptor.isNullable()) {
-			builder.ensureImport("javax.annotation.CheckForNull");
-			builder.ensureImport("javax.annotation.Nullable");
+			java.ensureImport("javax.annotation.CheckForNull");
+			java.ensureImport("javax.annotation.Nullable");
 		} else {
-			builder.ensureImport("javax.annotation.Nonnull");
+			java.ensureImport("javax.annotation.Nonnull");
 		}
 
 		AnalyzedMethod setter = descriptor.getSetter();
-		ClassScopeOperationBuilder clazz = builder.inPublicClass();
+		ClassScopeOperationBuilder clazz = java.inPublicClass();
 		if (setter != null) {
 			MethodOperationBuilder setterScope = clazz.forMethod().withModifier(AccessModifier.PUBLIC)
 					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
@@ -90,7 +90,7 @@ public class AddJSR305Annotations extends JavaFilesAction {
 			getterScope.ensureAnnotation(descriptor.isNullable() ? "CheckForNull" : "Nonnull");
 		}
 
-		return builder.build();
+		return java.build();
 	}
 
 }

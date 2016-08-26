@@ -69,12 +69,12 @@ public class CheckForPrimitivesWithJSR305 extends JavaFilesAction {
 			return null;
 		}
 
-		JavaRecipeBuilder builder = new JavaRecipeBuilder();
+		JavaRecipeBuilder java = new JavaRecipeBuilder();
 
 		AnalyzedMethod getter = descriptor.getGetter();
 		AnalyzedMethod setter = descriptor.getSetter();
 
-		ClassScopeOperationBuilder clazz = builder.inPublicClass();
+		ClassScopeOperationBuilder clazz = java.inPublicClass();
 		if (setter != null) {
 			MethodOperationBuilder setterScope = clazz.forMethod().withModifier(AccessModifier.PUBLIC)
 					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
@@ -94,6 +94,6 @@ public class CheckForPrimitivesWithJSR305 extends JavaFilesAction {
 			getterScope.removeAnnotation("Nullable");
 		}
 
-		return builder.build();
+		return java.build();
 	}
 }
