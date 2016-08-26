@@ -17,10 +17,10 @@ import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedClass;
 import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedMethod;
 import com.jeroensteenbeeke.andalite.java.analyzer.ClassAnalyzer;
 import com.jeroensteenbeeke.andalite.java.analyzer.types.Primitive;
-import com.jeroensteenbeeke.andalite.java.transformation.ClassLocator;
+import com.jeroensteenbeeke.andalite.java.transformation.ClassScopeOperationBuilder;
 import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipe;
 import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipeBuilder;
-import com.jeroensteenbeeke.andalite.java.transformation.Operations;
+import com.jeroensteenbeeke.andalite.java.transformation.MethodOperationBuilder;
 
 public class AddJSR305Annotations extends JavaFilesAction {
 	public ActionResult perform() {
@@ -66,31 +66,31 @@ public class AddJSR305Annotations extends JavaFilesAction {
 			return null;
 		}
 
-		JavaRecipeBuilder builder = new JavaRecipeBuilder();
+		JavaRecipeBuilder java = new JavaRecipeBuilder();
 
 		if (descriptor.isNullable()) {
-			builder.atRoot().ensure(Operations.imports("javax.annotation.CheckForNull"));
-			builder.atRoot().ensure(Operations.imports("javax.annotation.Nullable"));
+			java.ensureImport("javax.annotation.CheckForNull");
+			java.ensureImport("javax.annotation.Nullable");
 		} else {
-			builder.atRoot().ensure(Operations.imports("javax.annotation.Nonnull"));
+			java.ensureImport("javax.annotation.Nonnull");
 		}
 
 		AnalyzedMethod setter = descriptor.getSetter();
+		ClassScopeOperationBuilder clazz = java.inPublicClass();
 		if (setter != null) {
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
+			MethodOperationBuilder setterScope = clazz.forMethod().withModifier(AccessModifier.PUBLIC)
 					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
-					.named(setter.getName()).forParameterAtIndex(0)
-					.ensure(Operations.hasParameterAnnotation(descriptor.isNullable() ? "Nullable" : "Nonnull"));
+					.named(setter.getName());
+			setterScope.forParameterAtIndex(0).ensureAnnotation(descriptor.isNullable() ? "Nullable" : "Nonnull");
 		}
 		AnalyzedMethod getter = descriptor.getGetter();
 		if (getter != null) {
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
-					.withReturnType(descriptor.getField().getType().toJavaString())
-					.named(getter.getName())
-					.ensure(Operations.hasMethodAnnotation(descriptor.isNullable() ? "CheckForNull" : "Nonnull"));
+			MethodOperationBuilder getterScope = clazz.forMethod().withModifier(AccessModifier.PUBLIC)
+					.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName());
+			getterScope.ensureAnnotation(descriptor.isNullable() ? "CheckForNull" : "Nonnull");
 		}
 
-		return builder.build();
+		return java.build();
 	}
 
 }

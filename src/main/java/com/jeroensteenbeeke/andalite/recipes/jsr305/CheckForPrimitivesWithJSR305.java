@@ -17,11 +17,11 @@ import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedClass;
 import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedMethod;
 import com.jeroensteenbeeke.andalite.java.analyzer.ClassAnalyzer;
 import com.jeroensteenbeeke.andalite.java.analyzer.types.Primitive;
-import com.jeroensteenbeeke.andalite.java.transformation.ClassLocator;
+import com.jeroensteenbeeke.andalite.java.transformation.ClassScopeOperationBuilder;
 import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipe;
 import com.jeroensteenbeeke.andalite.java.transformation.JavaRecipeBuilder;
-import com.jeroensteenbeeke.andalite.java.transformation.Operations;
-import com.jeroensteenbeeke.andalite.recipes.jsr305.JavaFilesAction.PropertyDescriptor;
+import com.jeroensteenbeeke.andalite.java.transformation.MethodOperationBuilder;
+import com.jeroensteenbeeke.andalite.java.transformation.ParameterScopeOperationBuilder;
 
 public class CheckForPrimitivesWithJSR305 extends JavaFilesAction {
 	public ActionResult perform() {
@@ -41,7 +41,7 @@ public class CheckForPrimitivesWithJSR305 extends JavaFilesAction {
 
 				}).flatMap(this::findProperties).map(pd -> {
 					JavaRecipe recipe = toRecipe(pd);
-					
+
 					return recipe != null ? new JavaTransformation(pd.getSourceFile().getOriginalFile(), recipe) : null;
 
 				}).filter(Objects::nonNull).forEach(t -> {
@@ -69,34 +69,31 @@ public class CheckForPrimitivesWithJSR305 extends JavaFilesAction {
 			return null;
 		}
 
-		JavaRecipeBuilder builder = new JavaRecipeBuilder();
+		JavaRecipeBuilder java = new JavaRecipeBuilder();
 
 		AnalyzedMethod getter = descriptor.getGetter();
 		AnalyzedMethod setter = descriptor.getSetter();
 
+		ClassScopeOperationBuilder clazz = java.inPublicClass();
 		if (setter != null) {
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
+			MethodOperationBuilder setterScope = clazz.forMethod().withModifier(AccessModifier.PUBLIC)
 					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
-					.named(setter.getName()).forParameterAtIndex(0).ensure(Operations.removeParameterAnnotation("Nonnull"));
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
-					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
-					.named(setter.getName()).forParameterAtIndex(0).ensure(Operations.removeParameterAnnotation("CheckForNull"));
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
-					.withReturnType("void").withParameterOfType(descriptor.getField().getType().toJavaString())
-					.named(setter.getName()).forParameterAtIndex(0).ensure(Operations.removeParameterAnnotation("Nullable"));
+					.named(setter.getName());
+			ParameterScopeOperationBuilder firstParameter = setterScope.forParameterAtIndex(0);
+
+			firstParameter.removeAnnotation("Nonnull");
+			firstParameter.removeAnnotation("CheckForNull");
+			firstParameter.removeAnnotation("Nullable");
 		}
 		if (getter != null) {
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
-					.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName())
-					.ensure(Operations.removeMethodAnnotation("Nonnull"));
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
-			.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName())
-			.ensure(Operations.removeMethodAnnotation("CheckForNull"));
-			builder.inClass(ClassLocator.publicClass()).forMethod().withModifier(AccessModifier.PUBLIC)
-			.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName())
-			.ensure(Operations.removeMethodAnnotation("Nullable"));
+			MethodOperationBuilder getterScope = clazz.forMethod().withModifier(AccessModifier.PUBLIC)
+					.withReturnType(descriptor.getField().getType().toJavaString()).named(getter.getName());
+			
+			getterScope.removeAnnotation("Nonnull");
+			getterScope.removeAnnotation("CheckForNull");
+			getterScope.removeAnnotation("Nullable");
 		}
 
-		return builder.build();
+		return java.build();
 	}
 }
