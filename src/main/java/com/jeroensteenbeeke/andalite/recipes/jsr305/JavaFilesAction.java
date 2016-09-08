@@ -42,7 +42,9 @@ public abstract class JavaFilesAction implements PerformableAction {
 
 					for (AnalyzedField analyzedField : cl.getFields()) {
 						Boolean nullable = null;
-						if (analyzedField.hasAnnotation("Column")) {
+						if (analyzedField.hasAnnotation("NotNull")) {
+							nullable = false;
+						} else if (analyzedField.hasAnnotation("Column")) {
 							AnalyzedAnnotation annotation = analyzedField.getAnnotation("Column");
 							if (annotation.hasValueNamed("nullable")) {
 								BooleanValue booleanValue = annotation.getValue(BooleanValue.class, "nullable");
