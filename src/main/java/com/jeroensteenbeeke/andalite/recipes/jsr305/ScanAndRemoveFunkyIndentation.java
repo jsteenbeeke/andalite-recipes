@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.jeroensteenbeeke.andalite.core.ActionResult;
-import com.jeroensteenbeeke.andalite.core.TypedActionResult;
+import  com.jeroensteenbeeke.lux.ActionResult;
+import com.jeroensteenbeeke.lux.TypedResult;
 import com.jeroensteenbeeke.andalite.java.analyzer.AccessModifier;
 import com.jeroensteenbeeke.andalite.java.analyzer.AnalyzedClass;
 import com.jeroensteenbeeke.andalite.java.analyzer.ClassAnalyzer;
@@ -31,7 +31,7 @@ public class ScanAndRemoveFunkyIndentation extends JavaFilesAction {
 		List<String> errors = Collections.synchronizedList(new LinkedList<String>());
 
 		findJavaFiles(new File(System.getProperty("user.dir"))).stream().parallel().map(ClassAnalyzer::new)
-				.map(ClassAnalyzer::analyze).filter(r -> r.isOk()).map(TypedActionResult::getObject).filter(ac -> {
+				.map(ClassAnalyzer::analyze).filter(r -> r.isOk()).map(TypedResult::getObject).filter(ac -> {
 					for (AnalyzedClass cl : ac.getClasses()) {
 						if (cl.getAccessModifier() == AccessModifier.PUBLIC) {
 							if (cl.hasAnnotation("Entity") || cl.hasAnnotation("MappedSuperclass")) {

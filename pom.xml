@@ -4,7 +4,7 @@
 
   <groupId>com.jeroensteenbeeke.andalite</groupId>
   <artifactId>andalite-recipes</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>andalite-recipes</name>
@@ -18,7 +18,7 @@
     <dependency>
     	<groupId>com.jeroensteenbeeke.andalite</groupId>
     	<artifactId>andalite-forge</artifactId>
-    	<version>1.0-SNAPSHOT</version>
+    	<version>1.2-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>junit</groupId>
@@ -32,8 +32,8 @@
   		<plugin>
   			<artifactId>maven-compiler-plugin</artifactId>
   			<configuration>
-  				<source>1.8</source>
-  				<target>1.8</target>
+  				<source>17</source>
+  				<target>17</target>
   			</configuration>
   		</plugin>
   	</plugins>
